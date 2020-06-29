@@ -1,0 +1,74 @@
+#! /bin/bash
+#
+# Checks if some packages are installed, if not starts installation.
+#
+# Bernd Storck (Berlin, Germany) 2020-06-29
+# https://www.facebook.com/BStLinux/
+
+if [ "$LANG" != '' ]; then
+
+	LANG_ID="$LANG"
+else
+	LANG_ID="$LANGUAGE"
+fi
+
+LANG_ID="${LANG_ID:0:2}"
+
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+	echo -e "\n chkinst 1.0.0\n"
+
+	case "$LANG_ID" in
+		"de"|"DE")
+	echo " Überprüft, ob die aufgeführten Software-Pakete schon installiert sind 
+ und installiert sie, wenn nicht.
+
+ ANWENDUNGSBEISPIEL:
+
+    chkinst xclip xdotool
+
+ AUFRUFSYNTAX:
+
+    chkinst <Name_von_Paket_1> <Name_von_Paket_2> ...
+"
+			;;
+
+		*)
+	echo " Checks if some packages are installed, if not starts installation.
+
+ USAGE EXAMPLE:
+
+    chkinst xclip xdotool
+
+ SYNTAX OF CALL:
+
+    chkinst <package1_name> <package2_name> ...
+"
+			;;
+	esac	
+
+else
+
+	case "$LANG_ID" in
+		"de"|"DE")
+
+			NOT_PRESENT="wird gleich installiert."
+			EXISTS_ALREADY="ist schon installiert."
+			;;
+
+		*)
+			NOT_PRESENT="will be installed now."
+			EXISTS_ALREADY="is already installed."
+			;;
+	esac	
+
+
+	for i in "$@";
+	do
+		if [ ! "$(which "$i")" ]; then
+			echo -e "\e[1;37m$i ${NOT_PRESENT}\e[0m"
+			sudo apt install "$i"
+		else
+			echo -e "\e[1;32m$i ${EXISTS_ALREADY}\e[0m"
+		fi
+	done
+fi
