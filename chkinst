@@ -2,73 +2,93 @@
 #
 # Checks if some packages are installed, if not starts installation.
 #
-# Bernd Storck (Berlin, Germany) 2020-06-29
+# Bernd Storck (Berlin, Germany) 2020-06-29, 2023-07-14
 # https://www.facebook.com/BStLinux/
 
+
+
+PROG_NAME="ckhinst"
+VERSION="1.1.0"  # Set the version number
+
+
+help_de() {
+  echo " Überprüft, ob die aufgeführten Software-Pakete installiert sind
+   und installiert sie, falls nicht.
+  
+   ANWENDUNGSBEISPIEL:
+  
+      chkinst xclip xdotool
+  
+   AUFRUFSYNTAX:
+  
+      chkinst <Name_von_Paket_1> <Name_von_Paket_2> ...
+  "
+}
+
+
+help_en() {
+  echo " Checks if some packages are installed, if not starts installation.
+  
+   USAGE EXAMPLE:
+  
+      chkinst xclip xdotool
+  
+   SYNTAX OF CALL:
+  
+      chkinst <package1_name> <package2_name> ...
+  "
+}
+
+# Language identification:
 if [ "$LANG" != '' ]; then
-
-	LANG_ID="$LANG"
+  LANG_ID="$LANG"
 else
-	LANG_ID="$LANGUAGE"
+  LANG_ID="$LANGUAGE"
 fi
-
 LANG_ID="${LANG_ID:0:2}"
 
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-	echo -e "\n chkinst 1.0.0\n"
+# Localisation of prompt strings:
+case "$LANG_ID" in
+  "de"|"DE")
+        NOT_PRESENT="wird gleich installiert."
+        EXISTS_ALREADY="ist schon installiert."
+        UNKNOWN_PARAMETER="Unbekannter Aufrufparameter"
+        ;;
+  *)
+        NOT_PRESENT="will be installed now."
+        EXISTS_ALREADY="is already installed."
+        UNKNOWN_PARAMETER="Unknown parameter"
+        ;;
+esac
 
-	case "$LANG_ID" in
-		"de"|"DE")
-	echo " Überprüft, ob die aufgeführten Software-Pakete schon installiert sind 
- und installiert sie, wenn nicht.
-
- ANWENDUNGSBEISPIEL:
-
-    chkinst xclip xdotool
-
- AUFRUFSYNTAX:
-
-    chkinst <Name_von_Paket_1> <Name_von_Paket_2> ...
-"
-			;;
-
-		*)
-	echo " Checks if some packages are installed, if not starts installation.
-
- USAGE EXAMPLE:
-
-    chkinst xclip xdotool
-
- SYNTAX OF CALL:
-
-    chkinst <package1_name> <package2_name> ...
-"
-			;;
-	esac	
-
-else
-
-	case "$LANG_ID" in
-		"de"|"DE")
-
-			NOT_PRESENT="wird gleich installiert."
-			EXISTS_ALREADY="ist schon installiert."
-			;;
-
-		*)
-			NOT_PRESENT="will be installed now."
-			EXISTS_ALREADY="is already installed."
-			;;
-	esac	
-
-
-	for i in "$@";
-	do
-		if [ ! "$(which "$i")" ]; then
-			echo -e "\e[1;37m$i ${NOT_PRESENT}\e[0m"
-			sudo apt install "$i"
-		else
-			echo -e "\e[1;32m$i ${EXISTS_ALREADY}\e[0m"
-		fi
-	done
+if [ "${1:0:1}" = '-' ]; then
+  case "$1" in
+    --help|-h|--hilf)
+        printf "\n %s %s\n\n" "$PROG_NAME" "$VERSION"
+        case "$LANG_ID" in
+           "de"|"DE")  help_de;;
+           *)          help_en;;
+        esac
+        ;;
+    --version|-[vV])
+        echo "$PROG_NAME version $VERSION"
+        ;;
+    -\#)
+        echo "$VERSION"
+        ;;
+    *)
+        printf "%s $VERSION: %s \"%s\"\n" "$PROG_NAME" "$UNKNOWN_PARAMETER" "$1"
+        ;;
+  esac
+  exit  
 fi
+
+for i in "$@";
+do
+  if [ ! "$(command -v "$i")" ]; then
+      echo -e "\e[1;37m$i ${NOT_PRESENT}\e[0m"
+      sudo apt install "$i"
+    else
+      echo -e "\e[1;32m$i ${EXISTS_ALREADY}\e[0m"
+   fi
+done
